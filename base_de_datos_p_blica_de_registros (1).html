@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Datos Pública de Registros</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md">
+                    <i data-lucide="database" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-none">DataPublica</h1>
+                    <span class="text-xs text-slate-500 font-medium">Directorio Abierto de Registros</span>
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="switchTab('register')" id="btn-tab-register" class="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Nuevo Registro</span>
+                </button>
+                <button onclick="switchTab('directory')" id="btn-tab-directory" class="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 transition">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>Ver Directores (<span id="counter-badge">0</span>)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Banner de Información Pública -->
+    <div class="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs sm:text-sm text-center flex items-center justify-center gap-2">
+        <i data-lucide="globe" class="w-4 h-4 text-amber-600 shrink-0"></i>
+        <span><strong>Aviso Público:</strong> La información ingresada en este portal es accesible libremente para consulta pública comunitaria.</span>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Métricas Rápidas -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Total Registrados</p>
+                    <p class="text-xl font-bold text-slate-800" id="stat-total">0</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+                    <i data-lucide="globe-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Países Distintos</p>
+                    <p class="text-xl font-bold text-slate-800" id="stat-countries">0</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-sky-50 text-sky-600 rounded-lg shrink-0">
+                    <i data-lucide="building-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Ciudades</p>
+                    <p class="text-xl font-bold text-slate-800" id="stat-cities">0</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg shrink-0">
+                    <i data-lucide="calculator" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">Promedio Edad</p>
+                    <p class="text-xl font-bold text-slate-800" id="stat-avg-age">0 yrs</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 1: FORMULARIO DE REGISTRO (Ocultable) -->
+        <section id="section-register" class="hidden mb-8">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 sm:p-6 bg-slate-900 text-white flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="user-plus" class="w-5 h-5 text-indigo-400"></i>
+                            Formulario de Registro Público
+                        </h2>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-0.5">Ingresa tus datos completos para formar parte del registro oficial.</p>
+                    </div>
+                    <button onclick="switchTab('directory')" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <form id="form-register" onsubmit="handleFormSubmit(event)" class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        
+                        <!-- Nombres -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nombre(s) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="text" id="input-firstname" required placeholder="Ej. Juan Carlos" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Apellidos -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Apellido(s) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="user-check" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="text" id="input-lastname" required placeholder="Ej. Pérez Gómez" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Cédula / Documento ID -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Documento / ID / Cédula <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="id-card" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="text" id="input-national-id" required placeholder="Ej. 1098765432" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Edad -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Edad <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="number" id="input-age" min="1" max="120" required placeholder="Ej. 28" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- País de Origen -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">País de Origen <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="flag" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <select id="input-country" required class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white transition">
+                                    <option value="" disabled selected>Seleccione un país...</option>
+                                    <option value="Argentina">Argentina</option>
+                                    <option value="Bolivia">Bolivia</option>
+                                    <option value="Chile">Chile</option>
+                                    <option value="Colombia">Colombia</option>
+                                    <option value="Costa Rica">Costa Rica</option>
+                                    <option value="Ecuador">Ecuador</option>
+                                    <option value="España">España</option>
+                                    <option value="Estados Unidos">Estados Unidos</option>
+                                    <option value="Guatemala">Guatemala</option>
+                                    <option value="México">México</option>
+                                    <option value="Panamá">Panamá</option>
+                                    <option value="Paraguay">Paraguay</option>
+                                    <option value="Perú">Perú</option>
+                                    <option value="República Dominicana">República Dominicana</option>
+                                    <option value="Uruguay">Uruguay</option>
+                                    <option value="Venezuela">Venezuela</option>
+                                    <option value="Otro">Otro País</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Ciudad -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Ciudad Residencia <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="map-pin" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="text" id="input-city" required placeholder="Ej. Bogotá, Madrid, CDMX" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Correo Electrónico -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="mail" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="email" id="input-email" required placeholder="ejemplo@correo.com" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Teléfono / Contacto -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Teléfono / Celular <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <i data-lucide="phone" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="tel" id="input-phone" required placeholder="Ej. +57 300 1234567" 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Profesión / Ocupación (Opcional Extra) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Ocupación / Profesión</label>
+                            <div class="relative">
+                                <i data-lucide="briefcase" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                                <input type="text" id="input-occupation" placeholder="Ej. Ingeniero, Estudiante..." 
+                                    class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Mensaje informativo -->
+                    <div class="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-600 shrink-0"></i>
+                        <span>Los datos serán almacenados localmente en su navegador para acceso y prueba inmediata.</span>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" onclick="switchTab('directory')" class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-200 flex items-center gap-2 transition">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            Guardar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: TABLA Y BUSCADOR PÚBLICO -->
+        <section id="section-directory" class="space-y-4">
+            
+            <!-- Barra de Herramientas (Solo Buscador y Filtro por País) -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4 justify-between items-center">
+                
+                <!-- Buscador Universal Destacado -->
+                <div class="relative w-full sm:w-2/3 lg:w-1/2">
+                    <i data-lucide="search" class="w-5 h-5 absolute left-3.5 top-3 text-slate-400"></i>
+                    <input type="text" id="search-query" oninput="renderTable()" placeholder="Buscar por Nombre, ID, Ciudad o País..." 
+                        class="w-full pl-11 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition shadow-sm">
+                </div>
+
+                <!-- Filtros Secundarios -->
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    
+                    <!-- Filtro por País -->
+                    <select id="filter-country" onchange="renderTable()" class="w-full sm:w-auto px-3.5 py-2.5 text-xs font-semibold border border-slate-200 rounded-xl bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="ALL">Todos los Países</option>
+                    </select>
+
+                    <!-- Ordenar Por -->
+                    <select id="filter-sort" onchange="renderTable()" class="w-full sm:w-auto px-3.5 py-2.5 text-xs font-semibold border border-slate-200 rounded-xl bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="recent">Más Recientes</option>
+                        <option value="name">Nombre (A-Z)</option>
+                        <option value="age-asc">Edad (Menor a Mayor)</option>
+                        <option value="age-desc">Edad (Mayor a Menor)</option>
+                    </select>
+
+                </div>
+            </div>
+
+            <!-- Tabla principal -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-100/70 text-slate-700 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="py-3.5 px-4">Ciudadano / Nombre</th>
+                                <th class="py-3.5 px-4">Documento ID</th>
+                                <th class="py-3.5 px-4">Origen / Ubicación</th>
+                                <th class="py-3.5 px-4">Edad</th>
+                                <th class="py-3.5 px-4">Contacto</th>
+                                <th class="py-3.5 px-4 text-center">Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-table-body" class="divide-y divide-slate-100">
+                            <!-- Inserción dinámica de filas -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado Vacío -->
+                <div id="empty-state" class="hidden py-12 px-4 text-center">
+                    <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="user-x" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-slate-800">No se encontraron registros</h3>
+                    <p class="text-slate-500 text-xs mt-1 max-w-sm mx-auto">Prueba cambiando los criterios de búsqueda o ingresa una nueva persona al registro público.</p>
+                    <button onclick="switchTab('register')" class="mt-4 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg shadow-sm hover:bg-indigo-700 transition">
+                        + Registrar Nueva Persona
+                    </button>
+                </div>
+
+                <!-- Pie de tabla / Paginación simple -->
+                <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs text-slate-500">
+                    <span id="showing-count">Mostrando 0 registros</span>
+                    <span>Directorio Público Activo</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Detalle Completo -->
+    <div id="modal-detail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Modal Header -->
+            <div class="bg-indigo-600 text-white p-5 flex justify-between items-start">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold border border-white/30" id="modal-avatar">
+                        --
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg leading-tight" id="modal-fullname">Nombre Completo</h3>
+                        <p class="text-xs text-indigo-200 font-medium mt-0.5" id="modal-occupation-badge">Ocupación</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 space-y-4">
+                
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-0.5">Documento ID</span>
+                        <span class="font-bold text-slate-800 text-sm" id="modal-id">---</span>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-0.5">Edad</span>
+                        <span class="font-bold text-slate-800 text-sm" id="modal-age">---</span>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-0.5">País Origen</span>
+                        <span class="font-semibold text-slate-800" id="modal-country">---</span>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block mb-0.5">Ciudad Residencia</span>
+                        <span class="font-semibold text-slate-800" id="modal-city">---</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-100 text-xs">
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50">
+                        <i data-lucide="mail" class="w-4 h-4 text-indigo-500"></i>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-medium">Correo Electrónico</span>
+                            <a id="modal-email" href="#" class="font-medium text-slate-700 hover:text-indigo-600">---</a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50">
+                        <i data-lucide="phone" class="w-4 h-4 text-emerald-500"></i>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-medium">Teléfono / Celular</span>
+                            <span id="modal-phone" class="font-medium text-slate-700">---</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-medium">Fecha de Registro</span>
+                            <span id="modal-createdat" class="font-medium text-slate-700">---</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200/60 rounded-xl transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-out pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700 text-xs font-medium">
+            <div id="toast-icon" class="text-emerald-400">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+            </div>
+            <span id="toast-message">Operación realizada con éxito</span>
+        </div>
+    </div>
+
+    <!-- Script de Funcionalidad -->
+    <script>
+        // Clave del LocalStorage
+        const STORAGE_KEY = 'public_database_records';
+
+        // Estado inicial de datos
+        let records = [];
+
+        // Inicialización al cargar la página
+        window.onload = function() {
+            loadRecords();
+            renderTable();
+            updateStats();
+            populateCountryFilter();
+            lucide.createIcons();
+        };
+
+        // Cambiar pestañas/vistas
+        function switchTab(tab) {
+            const registerSec = document.getElementById('section-register');
+            const btnReg = document.getElementById('btn-tab-register');
+            const btnDir = document.getElementById('btn-tab-directory');
+
+            if (tab === 'register') {
+                registerSec.classList.remove('hidden');
+                btnReg.classList.add('bg-indigo-50', 'text-indigo-700', 'font-semibold', 'border', 'border-indigo-200');
+                btnReg.classList.remove('text-slate-600');
+                btnDir.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-semibold', 'border', 'border-indigo-200');
+                btnDir.classList.add('text-slate-600');
+                document.getElementById('input-firstname').focus();
+            } else {
+                registerSec.classList.add('hidden');
+                btnDir.classList.add('bg-indigo-50', 'text-indigo-700', 'font-semibold', 'border', 'border-indigo-200');
+                btnDir.classList.remove('text-slate-600');
+                btnReg.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-semibold', 'border', 'border-indigo-200');
+                btnReg.classList.add('text-slate-600');
+            }
+        }
+
+        // Cargar registros desde LocalStorage
+        function loadRecords() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (data) {
+                try {
+                    records = JSON.parse(data);
+                } catch (e) {
+                    records = [];
+                }
+            } else {
+                // Registros por defecto si la base de datos está vacía
+                records = getInitialDemoData();
+                saveRecords();
+            }
+        }
+
+        // Guardar en LocalStorage
+        function saveRecords() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateStats();
+            populateCountryFilter();
+        }
+
+        // Cargar Datos Demo
+        function getInitialDemoData() {
+            return [
+                {
+                    id: 'REC-' + Date.now() + '-1',
+                    firstName: 'Ana Sofía',
+                    lastName: 'Martínez',
+                    nationalId: '1029384756',
+                    age: 29,
+                    country: 'Colombia',
+                    city: 'Medellín',
+                    email: 'ana.martinez@ejemplo.com',
+                    phone: '+57 311 9876543',
+                    occupation: 'Diseñadora UX',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'REC-' + Date.now() + '-2',
+                    firstName: 'Carlos Eduardo',
+                    lastName: 'González',
+                    nationalId: '876543210',
+                    age: 35,
+                    country: 'México',
+                    city: 'Guadalajara',
+                    email: 'carlos.glez@ejemplo.com',
+                    phone: '+52 33 1234 5678',
+                    occupation: 'Desarrollador Web',
+                    createdAt: new Date(Date.now() - 86400000).toISOString()
+                },
+                {
+                    id: 'REC-' + Date.now() + '-3',
+                    firstName: 'Lucía',
+                    lastName: 'Fernández',
+                    nationalId: '456789123',
+                    age: 24,
+                    country: 'Argentina',
+                    city: 'Buenos Aires',
+                    email: 'lucia.f@ejemplo.com',
+                    phone: '+54 9 11 5555 4444',
+                    occupation: 'Periodista',
+                    createdAt: new Date(Date.now() - 172800000).toISOString()
+                }
+            ];
+        }
+
+        // Manejar envío del formulario
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const newRecord = {
+                id: 'REC-' + Date.now(),
+                firstName: document.getElementById('input-firstname').value.trim(),
+                lastName: document.getElementById('input-lastname').value.trim(),
+                nationalId: document.getElementById('input-national-id').value.trim(),
+                age: parseInt(document.getElementById('input-age').value),
+                country: document.getElementById('input-country').value,
+                city: document.getElementById('input-city').value.trim(),
+                email: document.getElementById('input-email').value.trim(),
+                phone: document.getElementById('input-phone').value.trim(),
+                occupation: document.getElementById('input-occupation').value.trim() || 'No especificada',
+                createdAt: new Date().toISOString()
+            };
+
+            // Validar cédula única opcionalmente
+            const exists = records.some(r => r.nationalId === newRecord.nationalId);
+            if (exists) {
+                showToast('Ya existe un registro con este número de Documento/ID', 'error');
+                return;
+            }
+
+            records.unshift(newRecord);
+            saveRecords();
+            renderTable();
+            
+            // Limpiar formulario
+            document.getElementById('form-register').reset();
+            showToast('¡Registro añadido con éxito a la base pública!');
+            switchTab('directory');
+        }
+
+        // Renderizar Tabla con Filtros
+        function renderTable() {
+            const tbody = document.getElementById('records-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const query = document.getElementById('search-query').value.toLowerCase().trim();
+            const countryFilter = document.getElementById('filter-country').value;
+            const sortFilter = document.getElementById('filter-sort').value;
+
+            // Filtrar
+            let filtered = records.filter(r => {
+                const matchesQuery = 
+                    r.firstName.toLowerCase().includes(query) ||
+                    r.lastName.toLowerCase().includes(query) ||
+                    r.nationalId.toLowerCase().includes(query) ||
+                    r.city.toLowerCase().includes(query) ||
+                    r.country.toLowerCase().includes(query) ||
+                    r.email.toLowerCase().includes(query);
+
+                const matchesCountry = countryFilter === 'ALL' || r.country === countryFilter;
+
+                return matchesQuery && matchesCountry;
+            });
+
+            // Ordenar
+            filtered.sort((a, b) => {
+                if (sortFilter === 'recent') {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                } else if (sortFilter === 'name') {
+                    return a.firstName.localeCompare(b.firstName);
+                } else if (sortFilter === 'age-asc') {
+                    return a.age - b.age;
+                } else if (sortFilter === 'age-desc') {
+                    return b.age - a.age;
+                }
+                return 0;
+            });
+
+            // Mostrar u Ocultar Estado Vacío
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                tbody.innerHTML = filtered.map(r => `
+                    <tr class="hover:bg-slate-50/80 transition group">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0">
+                                    ${r.firstName.charAt(0)}${r.lastName.charAt(0)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 leading-tight">${r.firstName} ${r.lastName}</p>
+                                    <p class="text-xs text-slate-400">${r.occupation}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-xs text-slate-600">${r.nationalId}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="inline-flex items-center gap-1 font-medium text-slate-700">
+                                ${r.city}, <span class="text-slate-400">${r.country}</span>
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-700 rounded-md">
+                                ${r.age} años
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs">
+                            <p class="text-slate-700">${r.email}</p>
+                            <p class="text-slate-400">${r.phone}</p>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <button onclick="openModal('${r.id}')" title="Ver Detalle Completo" class="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition inline-flex items-center gap-1">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                <span>Ver</span>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('showing-count').innerText = `Mostrando ${filtered.length} de ${records.length} registros`;
+            lucide.createIcons();
+        }
+
+        // Actualizar estadísticas del dashboard
+        function updateStats() {
+            document.getElementById('stat-total').innerText = records.length;
+            document.getElementById('counter-badge').innerText = records.length;
+
+            const countries = new Set(records.map(r => r.country));
+            document.getElementById('stat-countries').innerText = countries.size;
+
+            const cities = new Set(records.map(r => r.city.toLowerCase().trim()));
+            document.getElementById('stat-cities').innerText = cities.size;
+
+            if (records.length > 0) {
+                const totalAge = records.reduce((acc, curr) => acc + (curr.age || 0), 0);
+                const avg = Math.round(totalAge / records.length);
+                document.getElementById('stat-avg-age').innerText = `${avg} años`;
+            } else {
+                document.getElementById('stat-avg-age').innerText = '0 años';
+            }
+        }
+
+        // Llenar filtro de países dinámicamente
+        function populateCountryFilter() {
+            const select = document.getElementById('filter-country');
+            const currentValue = select.value;
+            const countries = [...new Set(records.map(r => r.country))].sort();
+
+            select.innerHTML = '<option value="ALL">Todos los Países</option>';
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+            });
+
+            select.value = currentValue;
+        }
+
+        // Abrir Modal de Detalle
+        function openModal(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+
+            document.getElementById('modal-avatar').innerText = `${record.firstName.charAt(0)}${record.lastName.charAt(0)}`;
+            document.getElementById('modal-fullname').innerText = `${record.firstName} ${record.lastName}`;
+            document.getElementById('modal-occupation-badge').innerText = record.occupation;
+            document.getElementById('modal-id').innerText = record.nationalId;
+            document.getElementById('modal-age').innerText = `${record.age} años`;
+            document.getElementById('modal-country').innerText = record.country;
+            document.getElementById('modal-city').innerText = record.city;
+            
+            const emailElem = document.getElementById('modal-email');
+            emailElem.innerText = record.email;
+            emailElem.href = `mailto:${record.email}`;
+
+            document.getElementById('modal-phone').innerText = record.phone;
+            
+            const dateStr = new Date(record.createdAt).toLocaleDateString('es-ES', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            document.getElementById('modal-createdat').innerText = dateStr;
+
+            document.getElementById('modal-detail').classList.remove('hidden');
+        }
+
+        // Cerrar Modal
+        function closeModal() {
+            document.getElementById('modal-detail').classList.add('hidden');
+        }
+
+        // Notificación Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.innerText = message;
+            
+            if (type === 'error') {
+                toastIcon.className = 'text-red-400';
+                toastIcon.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5"></i>';
+            } else {
+                toastIcon.className = 'text-emerald-400';
+                toastIcon.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i>';
+            }
+
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
